@@ -10,6 +10,7 @@
 #include <poll.h>
 #include <stdint.h>
 #include <sys/ioctl.h>
+#include <linux/ion.h>
 #include <sys/mman.h>
 
 #include "msm_kgsl.h"
@@ -25,6 +26,8 @@
 #include "tu_device.h"
 #include "tu_dynamic_rendering.h"
 #include "tu_rmv.h"
+#include <linux/dma-heap.h>
+#include "util/os_file.h"
 
 static int
 safe_ioctl(int fd, unsigned long request, void *arg)
@@ -68,6 +71,57 @@ kgsl_submitqueue_close(struct tu_device *dev, uint32_t queue_id)
    safe_ioctl(dev->physical_device->local_fd, IOCTL_KGSL_DRAWCTXT_DESTROY, &req);
 }
 
+static int
+dmabuf_alloc(uint64_t size)
+{
+   int ret;
+   int dma_heap = open("/dev/dma_heap/system", O_RDONLY);
+
+   if (dma_heap < 0) {
+      int ion_heap = open("/dev/ion", O_RDONLY);
+
+      if (ion_heap < 0)
+         return -1;
+
+      struct ion_allocation_data {
+         __u64 len;
+         __u32 heap_id_mask;
+         __u32 flags;
+         __u32 fd;
+         __u32 unused;
+      } alloc_data = {
+         .len = size,
+         /* ION_HEAP_SYSTEM | ION_SYSTEM_HEAP_ID */
+         .heap_id_mask = (1U << 0) | (1U << 25),
+         .flags = 0, /* uncached */
+      };
+
+      ret = safe_ioctl(ion_heap, _IOWR('I', 0, struct ion_allocation_data),
+                      &alloc_data);
+
+      close(ion_heap);
+
+      if (ret)
+         return -1;
+
+      return alloc_data.fd;
+   } else {
+      struct dma_heap_allocation_data alloc_data = {
+         .len = size,
+         .fd_flags = O_RDWR | O_CLOEXEC,
+      };
+
+      ret = safe_ioctl(dma_heap, DMA_HEAP_IOCTL_ALLOC, &alloc_data);
+
+      close(dma_heap);
+
+      if (ret)
+         return -1;
+
+      return alloc_data.fd;
+   }
+}
+
 static VkResult
 kgsl_bo_init(struct tu_device *dev,
              struct tu_bo **out_bo,
@@ -78,6 +132,21 @@ kgsl_bo_init(struct tu_device *dev,
              const char *name)
 {
    assert(client_iova == 0);
+
+   if (flags & TU_BO_ALLOC_SHAREABLE) {
+      int fd = dmabuf_alloc(size);
+
+      if (fd < 0) {
+         return vk_errorf(dev, VK_ERROR_OUT_OF_DEVICE_MEMORY,
+                       "DMABUF_ALLOC failed (%s)", strerror(errno));
+      }
+
+      VkResult res = tu_bo_init_dmabuf(dev, out_bo, size, fd);
+
+      close(fd);
+
+      return res;
+   }
 
    struct kgsl_gpumem_alloc_id req = {
       .size = size,
@@ -114,6 +183,7 @@ kgsl_bo_init(struct tu_device *dev,
       .iova = req.gpuaddr,
       .name = tu_debug_bos_add(dev, req.mmapsize, name),
       .refcnt = 1,
+      .dmabuf_fd = -1,
    };
 
    *out_bo = bo;
@@ -169,6 +239,7 @@ kgsl_bo_init_dmabuf(struct tu_device *dev,
       .iova = info_req.gpuaddr,
       .name = tu_debug_bos_add(dev, info_req.size, "dmabuf"),
       .refcnt = 1,
+      .dmabuf_fd = os_dupfd_cloexec(fd),
    };
 
    *out_bo = bo;
@@ -179,14 +250,22 @@ kgsl_bo_init_dmabuf(struct tu_device *dev,
 static int
 kgsl_bo_export_dmabuf(struct tu_device *dev, struct tu_bo *bo)
 {
-   tu_stub();
-
-   return -1;
+   treturn os_dupfd_cloexec(bo->dmabuf_fd);
 }
 
 static VkResult
 kgsl_bo_map(struct tu_device *dev, struct tu_bo *bo, void *placed_addr)
 {
+
+   if (bo->dmabuf_fd != -1) {
+      void *map = mmap(0, bo->size, PROT_READ | PROT_WRITE, MAP_SHARED, bo->dmabuf_fd, 0);
+
+      if (map != MAP_FAILED) {
+         bo->map = map;
+         return VK_SUCCESS;
+      }
+   }
+
    uint64_t offset = bo->gem_handle << 12;
    void *map = mmap(placed_addr, bo->size, PROT_READ | PROT_WRITE,
                     MAP_SHARED | (placed_addr != NULL ? MAP_FIXED : 0),
@@ -217,6 +296,9 @@ kgsl_bo_finish(struct tu_device *dev, struct tu_bo *bo)
       TU_RMV(bo_unmap, dev, bo);
       munmap(bo->map, bo->size);
    }
+
+   if (bo->dmabuf_fd != -1)
+	   close(bo->dmabuf_fd); 
 
    TU_RMV(bo_destroy, dev, bo);
 

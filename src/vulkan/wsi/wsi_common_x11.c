@@ -156,8 +156,11 @@ wsi_x11_check_dri3_compatible(const struct wsi_device *wsi_dev,
    int dri3_fd = wsi_dri3_open(conn, screen->root, None);
    if (dri3_fd == -1)
       return true;
-
+   #ifdef HAVE_LIBDRM
    bool match = wsi_device_matches_drm_fd(wsi_dev, dri3_fd);
+   #else
+   bool match = true;
+   #endif
 
    close(dri3_fd);
 
@@ -447,7 +450,7 @@ wsi_x11_get_connection(struct wsi_device *wsi_dev,
 
 static const VkFormat formats[] = {
    VK_FORMAT_R5G6B5_UNORM_PACK16,
-   VK_FORMAT_B8G8R8A8_SRGB,
+   // VK_FORMAT_B8G8R8A8_SRGB,
    VK_FORMAT_B8G8R8A8_UNORM,
    VK_FORMAT_A2R10G10B10_UNORM_PACK32,
 };
@@ -1239,13 +1242,16 @@ x11_wait_for_explicit_sync_release_submission(struct x11_swapchain *chain,
    STACK_ARRAY(struct wsi_image*, images, chain->base.image_count);
    for (uint32_t i = 0; i < chain->base.image_count; i++)
       images[i] = &chain->images[i].base;
-
+   #ifdef HAVE_LIBDRM
    VkResult result =
       wsi_drm_wait_for_explicit_sync_release(&chain->base,
                                              chain->base.image_count,
                                              images,
                                              rel_timeout_ns,
                                              image_index);
+   #else
+   VkResult result = VK_SUCCESS;
+   #endif                                          
    STACK_ARRAY_FINISH(images);
    return result;
 }
@@ -1391,7 +1397,7 @@ x11_present_to_x11_dri3(struct x11_swapchain *chain, uint32_t image_index,
       options |= XCB_PRESENT_OPTION_SUBOPTIMAL;
 #endif
 
-   xshmfence_reset(image->shm_fence);
+   //xshmfence_reset(image->shm_fence);
 
    if (!chain->base.image_info.explicit_sync) {
       ++chain->sent_image_count;
@@ -1743,9 +1749,9 @@ x11_acquire_next_image(struct wsi_swapchain *anv_chain,
       return result;
 
    assert(*image_index < chain->base.image_count);
-   if (chain->images[*image_index].shm_fence &&
+   /*if (chain->images[*image_index].shm_fence &&
        !chain->base.image_info.explicit_sync)
-      xshmfence_await(chain->images[*image_index].shm_fence);
+      xshmfence_await(chain->images[*image_index].shm_fence);*/
 
    return result;
 }
@@ -2111,14 +2117,23 @@ x11_image_init(VkDevice device_h, struct x11_swapchain *chain,
          return VK_ERROR_OUT_OF_HOST_MEMORY;
 
       cookie =
-         xcb_dri3_pixmap_from_buffer_checked(chain->conn,
-                                             image->pixmap,
-                                             chain->window,
-                                             image->base.sizes[0],
-                                             pCreateInfo->imageExtent.width,
-                                             pCreateInfo->imageExtent.height,
-                                             image->base.row_pitches[0],
-                                             chain->depth, bpp, fd);
+         xcb_dri3_pixmap_from_buffers_checked(chain->conn,
+                                              image->pixmap,
+                                              chain->window,
+                                              image->base.num_planes,
+                                              pCreateInfo->imageExtent.width,
+                                              pCreateInfo->imageExtent.height,
+                                              image->base.row_pitches[0],
+                                              image->base.offsets[0],
+                                              0,
+                                              0,
+                                              0,
+                                              0,
+                                              0,
+                                              0,
+                                              chain->depth, bpp,
+                                              1274,
+                                              &fd);
    }
 
    error = xcb_request_check(chain->conn, cookie);
@@ -2147,6 +2162,9 @@ x11_image_init(VkDevice device_h, struct x11_swapchain *chain,
       }
    }
 #endif
+
+image->sync_fence = 0;
+return VK_SUCCESS;
 
 out_fence:
    fence_fd = xshmfence_alloc_shm();
@@ -2189,10 +2207,6 @@ x11_image_finish(struct x11_swapchain *chain,
    xcb_void_cookie_t cookie;
 
    if (!chain->base.wsi->sw || chain->has_mit_shm) {
-      cookie = xcb_sync_destroy_fence(chain->conn, image->sync_fence);
-      xcb_discard_reply(chain->conn, cookie.sequence);
-      xshmfence_unmap_shm(image->shm_fence);
-
       cookie = xcb_free_pixmap(chain->conn, image->pixmap);
       xcb_discard_reply(chain->conn, cookie.sequence);
 
