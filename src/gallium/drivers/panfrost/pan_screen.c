@@ -825,7 +825,7 @@ panfrost_flush_frontbuffer(struct pipe_screen *_screen,
                            unsigned level, unsigned layer,
                            void *context_private, struct pipe_box *box)
 {
-   truct panfrost_resource *rsrc = pan_resource(prsrc);
+   struct panfrost_resource *rsrc = pan_resource(prsrc);
    struct panfrost_screen *screen = pan_screen(_screen);
    struct sw_winsys *winsys = screen->sw_winsys;
 
@@ -837,7 +837,7 @@ panfrost_flush_frontbuffer(struct pipe_screen *_screen,
       .depth = 1,
    };
 
-   ssert(rsrc->dt);
+   assert(rsrc->dt);
    uint8_t *map = winsys->displaytarget_map(winsys, rsrc->dt,PIPE_USAGE_DEFAULT);
 
    assert(map);
