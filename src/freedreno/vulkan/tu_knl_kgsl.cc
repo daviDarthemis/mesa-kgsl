@@ -10,7 +10,7 @@
 #include <poll.h>
 #include <stdint.h>
 #include <sys/ioctl.h>
-#include <linux/ion.h>
+//#include <linux/ion.h>
 #include <sys/mman.h>
 
 #include "msm_kgsl.h"
@@ -250,7 +250,7 @@ kgsl_bo_init_dmabuf(struct tu_device *dev,
 static int
 kgsl_bo_export_dmabuf(struct tu_device *dev, struct tu_bo *bo)
 {
-   treturn os_dupfd_cloexec(bo->dmabuf_fd);
+   return os_dupfd_cloexec(bo->dmabuf_fd);
 }
 
 static VkResult
