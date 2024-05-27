@@ -853,7 +853,7 @@ panfrost_flush_frontbuffer(struct pipe_screen *_screen,
 
     pctx->texture_unmap(pctx, trans);
 
-    winsys->displaytarget_display(winsys, rsrc->dt, context_private, x, y);
+    winsys->displaytarget_display(winsys, rsrc->dt, context_private, x);
 }
 
 
