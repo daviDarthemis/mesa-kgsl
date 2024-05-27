@@ -850,9 +850,10 @@ panfrost_flush_frontbuffer(struct pipe_screen *_screen,
                        MIN2(rsrc->dt_stride, trans->stride));
 
    pctx->texture_unmap(pctx, trans);
-
-   winsys->displaytarget_display(winsys, rsrc->dt, context_private, box);
 }
+
+
+winsys->displaytarget_display(winsys, rsrc->dt, context_private, box);
 
 struct pipe_screen *
 panfrost_create_screen(int fd, const struct pipe_screen_config *config,struct renderonly *ro)
