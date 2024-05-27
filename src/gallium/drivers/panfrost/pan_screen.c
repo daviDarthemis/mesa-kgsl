@@ -825,7 +825,7 @@ panfrost_flush_frontbuffer(struct pipe_screen *_screen,
                            struct pipe_context *pctx,
                            struct pipe_resource *prsrc,
                            unsigned level, unsigned layer,
-                           void *context_private, struct pipe_box *box)
+                           void *context_private, unsigned config, struct pipe_box *box)
 {
    struct panfrost_resource *rsrc = pan_resource(prsrc);
    struct panfrost_screen *screen = pan_screen(_screen);
@@ -854,7 +854,7 @@ panfrost_flush_frontbuffer(struct pipe_screen *_screen,
 
    pctx->texture_unmap(pctx, trans);
 
-   winsys->displaytarget_display(winsys, rsrc->dt, context_private, 0, box);
+   winsys->displaytarget_display(winsys, rsrc->dt, context_private, config, box);
 }
 
 struct pipe_screen *
@@ -926,6 +926,7 @@ panfrost_create_screen(int fd, const struct pipe_screen_config *config,
    screen->base.fence_finish = panfrost_fence_finish;
    screen->base.fence_get_fd = panfrost_fence_get_fd;
    screen->base.set_damage_region = panfrost_resource_set_damage_region;
+
    screen->base.flush_frontbuffer = panfrost_flush_frontbuffer;
 
    panfrost_resource_screen_init(&screen->base);
