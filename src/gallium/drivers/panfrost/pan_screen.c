@@ -926,6 +926,7 @@ panfrost_create_screen(int fd, const struct pipe_screen_config *config,
    screen->base.fence_finish = panfrost_fence_finish;
    screen->base.fence_get_fd = panfrost_fence_get_fd;
    screen->base.set_damage_region = panfrost_resource_set_damage_region;
+   creen->base.flush_frontbuffer = panfrost_flush_frontbuffer;
 
    panfrost_resource_screen_init(&screen->base);
    pan_blend_shader_cache_init(&dev->blend_shaders,
