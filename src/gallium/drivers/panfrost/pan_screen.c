@@ -879,8 +879,7 @@ panfrost_create_screen(int fd, const struct pipe_screen_config *config,
    screen->base.get_timestamp = u_default_get_timestamp;
    screen->base.is_format_supported = panfrost_is_format_supported;
    screen->base.query_dmabuf_modifiers = panfrost_query_dmabuf_modifiers;
-   screen->base.is_dmabuf_modifier_supported =
-      panfrost_is_dmabuf_modifier_supported;
+   screen->base.is_dmabuf_modifier_supported = panfrost_is_dmabuf_modifier_supported;
    screen->base.context_create = panfrost_create_context;
    screen->base.get_compiler_options = panfrost_screen_get_compiler_options;
    screen->base.get_disk_shader_cache = panfrost_get_disk_shader_cache;
@@ -926,7 +925,7 @@ panfrost_create_screen_sw(struct sw_winsys *winsys)
         if (fd < 0)
                 return NULL;
 
-        struct pipe_screen *scr = panfrost_create_screen(fd, NULL);
+        struct pipe_screen *scr = panfrost_create_screen_sw(fd ,0, NULL);
 
         if (scr)
                 pan_screen(scr)->sw_winsys = winsys;
