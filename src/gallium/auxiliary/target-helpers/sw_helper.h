@@ -24,6 +24,10 @@
 #include "softpipe/sp_public.h"
 #endif
 
+#ifdef GALLIUM_PANFROST
+#include "panfrost/pan_public.h"
+#endif
+
 #ifdef GALLIUM_LLVMPIPE
 #include "llvmpipe/lp_public.h"
 #endif
@@ -61,6 +65,11 @@ sw_screen_create_named(struct sw_winsys *winsys, const struct pipe_screen_config
       screen = zink_create_screen(winsys, config);
 #endif
 
+#if defined(GALLIUM_PANFROST)
+   if (screen == NULL && strcmp(driver, "panfrost") == 0)
+      screen = panfrost_create_screen_sw(winsys);
+#endif
+
 #if defined(GALLIUM_D3D12)
    if (screen == NULL && strcmp(driver, "d3d12") == 0)
       screen = d3d12_create_dxcore_screen(winsys, NULL);
@@ -83,6 +92,9 @@ sw_screen_create_vk(struct sw_winsys *winsys, const struct pipe_screen_config *c
 #endif
 #if defined(GALLIUM_SOFTPIPE)
       sw_vk ? "" : "softpipe",
+#endif
+#if defined(GALLIUM_PANFROST)
+      (sw_vk || only_sw) ? "" : "panfrost",
 #endif
    };
 

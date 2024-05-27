@@ -113,7 +113,9 @@ struct panfrost_screen {
       struct panfrost_pool bin_pool;
       struct panfrost_pool desc_pool;
    } blitter;
+   
 
+   struct sw_winsys *sw_winsys;
    struct panfrost_vtable vtbl;
    struct disk_cache *disk_cache;
    unsigned max_afbc_packing_ratio;
