@@ -637,18 +637,19 @@ panfrost_resource_create_with_modifier(struct pipe_screen *screen,
    so->base = *template;
    so->base.screen = screen;
 
-   if (pan_screen(screen)->sw_winsys && (template->bind & PAN_BIND_SHARED_MASK)) 
-   {
+   if (pan_screen(screen)->sw_winsys && (template->bind & PAN_BIND_SHARED_MASK)) {
+
       so->dt = pan_screen(screen)->sw_winsys->displaytarget_create(
-      pan_screen(screen)->sw_winsys,
-      so->base.bind,
-      so->base.format,
-      so->base.width0,
-      so->base.height0,
-      64,
-      NULL /*map_front_private*/,
-      &so->dt_stride);
+                        pan_screen(screen)->sw_winsys,
+                        so->base.bind,
+                        so->base.format,
+                        so->base.width0,
+                        so->base.height0,
+                        64,
+                        NULL /*map_front_private*/,
+                        &so->dt_stride);
    }
+
 
    pipe_reference_init(&so->base.reference, 1);
 
