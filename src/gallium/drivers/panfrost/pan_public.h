@@ -35,11 +35,11 @@ struct renderonly;
 struct sw_winsys;
 
 
-//struct pipe_screen *
-//panfrost_create_screen(int fd, const struct pipe_screen_config *config,struct renderonly *ro);
-
 struct pipe_screen *
-panfrost_create_screen(int fd, struct renderonly *ro);
+panfrost_create_screen(int fd, const struct pipe_screen_config *config,struct renderonly *ro);
+
+//struct pipe_screen *
+//panfrost_create_screen(int fd, struct renderonly *ro);
 
 struct pipe_screen *
 panfrost_create_screen_sw(struct sw_winsys *winsys);
