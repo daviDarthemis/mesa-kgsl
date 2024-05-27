@@ -927,7 +927,7 @@ panfrost_create_screen_sw(struct sw_winsys *winsys)
    }
    else
    {
-      fprintf("dispositivo /dev/mali0 nao foi encontrado");
+      //fprintf("dispositivo /dev/mali0 nao foi encontrado");
       return NULL;
    }
 
