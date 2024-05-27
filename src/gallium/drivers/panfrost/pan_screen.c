@@ -931,7 +931,7 @@ panfrost_create_screen_sw(struct sw_winsys *winsys)
       return NULL;
    }
 
-   struct pipe_screen *scr = panfrost_create_screen(fd ,0, NULL);
+   struct pipe_screen *scr = panfrost_create_screen(fd , -1, -1);
 
    if (scr)
       pan_screen(scr)->sw_winsys = winsys;
