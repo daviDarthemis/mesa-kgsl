@@ -818,7 +818,6 @@ panfrost_get_driver_query_info(struct pipe_screen *pscreen, unsigned index,
    return 1;
 }
 
-
 static void
 panfrost_flush_frontbuffer(struct pipe_screen *_screen,
                            struct pipe_context *pctx,
