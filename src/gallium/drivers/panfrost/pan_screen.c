@@ -823,6 +823,7 @@ panfrost_flush_frontbuffer(struct pipe_screen *_screen,
                            struct pipe_context *pctx,
                            struct pipe_resource *prsrc,
                            unsigned level, unsigned layer,
+                           void *context_private, unsigned int x, unsigned int y,
                            void *context_private, struct pipe_box *box)
 
 {
