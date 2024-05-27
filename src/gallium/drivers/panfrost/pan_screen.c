@@ -55,6 +55,9 @@
 
 #include "pan_context.h"
 
+#include "pan_public.h"
+#include "frontend/sw_winsys.h"
+
 #define DEFAULT_MAX_AFBC_PACKING_RATIO 90
 
 /* clang-format off */
