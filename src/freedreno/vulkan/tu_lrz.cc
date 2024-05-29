@@ -680,6 +680,7 @@ tu6_calculate_lrz_state(struct tu_cmd_buffer *cmd,
       }
    }
 
+   template <chip CHIP>
    if (CHIP >= A7XX)
       gras_lrz_cntl.z_func = tu6_compare_func(depth_compare_op);
 
