@@ -622,8 +622,10 @@ tu6_calculate_lrz_state(struct tu_cmd_buffer *cmd,
    bool z_write_enable = cmd->vk.dynamic_graphics_state.ds.depth.write_enable;
    bool z_bounds_enable = cmd->vk.dynamic_graphics_state.ds.depth.bounds_test.enable;
    VkCompareOp depth_compare_op =
-      cmd->vk.dynamic_graphics_state.ds.depth.compare_op;
+   cmd->vk.dynamic_graphics_state.ds.depth.compare_op;
 
+
+   template <chip CHIP>
    struct A6XX_GRAS_LRZ_CNTL gras_lrz_cntl = { 0 };
 
    if (!cmd->state.lrz.valid) {
@@ -847,7 +849,6 @@ tu6_calculate_lrz_state(struct tu_cmd_buffer *cmd,
 
 
 template <chip CHIP>
-
 void
 tu6_emit_lrz(struct tu_cmd_buffer *cmd, struct tu_cs *cs)
 {
