@@ -847,8 +847,6 @@ tu6_calculate_lrz_state(struct tu_cmd_buffer *cmd,
    return gras_lrz_cntl;
 }
 
-
-template <chip CHIP>
 void
 tu6_emit_lrz(struct tu_cmd_buffer *cmd, struct tu_cs *cs)
 {
