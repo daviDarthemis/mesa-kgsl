@@ -2850,12 +2850,12 @@ tu_AllocateMemory(VkDevice _device,
       }
 
 
-      const VkExportMemoryAllocateInfo *export_info =
+      /*const VkExportMemoryAllocateInfo *export_info =
          vk_find_struct_const(pAllocateInfo->pNext, EXPORT_MEMORY_ALLOCATE_INFO);
       if (export_info && (export_info->handleTypes &
                           (VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT |
                            VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT)))
-         alloc_flags |= TU_BO_ALLOC_SHAREABLE;
+         alloc_flags |= TU_BO_ALLOC_SHAREABLE;*/
 
       char name[64] = "vkAllocateMemory()";
       if (device->bo_sizes)
