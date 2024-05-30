@@ -645,6 +645,7 @@ get_ahb_buffer_format_properties2(
       switch (color_info.yuv_color_space) {
       case __DRI_YUV_COLOR_SPACE_ITU_REC601:
          p->suggestedYcbcrModel = VK_SAMPLER_YCBCR_MODEL_CONVERSION_YCBCR_601;
+         p->suggestedYcbcrRange = VK_SAMPLER_YCBCR_RANGE_ITU_NARROW;
          break;
       case __DRI_YUV_COLOR_SPACE_ITU_REC709:
          p->suggestedYcbcrModel = VK_SAMPLER_YCBCR_MODEL_CONVERSION_YCBCR_709;
